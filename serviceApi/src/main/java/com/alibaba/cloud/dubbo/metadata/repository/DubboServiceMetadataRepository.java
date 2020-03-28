@@ -152,7 +152,7 @@ public class DubboServiceMetadataRepository
 	 * Key is application name Value is Map&lt;RequestMetadata,
 	 * DubboRestServiceMetadata&gt;.
 	 */
-	private Map<String, Map<RequestMetadataMatcher, DubboRestServiceMetadata>> dubboRestServiceMetadataRepository = newHashMap();
+	public Map<String, Map<RequestMetadataMatcher, DubboRestServiceMetadata>> dubboRestServiceMetadataRepository = newHashMap();
 
 	// ====================================================================================
 	// //
