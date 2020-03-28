@@ -9,7 +9,7 @@ dubbo:
     generic: false
   protocol:
     name: dubbo
-    port: 20883
+    port: ${random.int[25000,65000]}
   registry:
     address: spring-cloud://localhost
 
