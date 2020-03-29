@@ -22,6 +22,7 @@ import com.alibaba.cloud.dubbo.service.DubboGenericServiceFactory;
 import com.alibaba.cloud.dubbo.service.DubboMetadataService;
 import com.alibaba.cloud.dubbo.service.DubboMetadataServiceProxy;
 import com.alibaba.cloud.dubbo.util.JSONUtils;
+import org.alibaba.test.service.IOUtil;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.registry.NotifyListener;
 import org.apache.dubbo.registry.RegistryFactory;
@@ -200,6 +201,13 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 							String serviceName = event.getServiceName();
 							Collection<ServiceInstance> serviceInstances = event
 									.getServiceInstances();
+							logger.error("\n------------{}, \n{}",url,serviceInstances);
+
+							IOUtil.writeFile(
+									("\n--------"+serviceInstances+"---"+url+"----\n"+serviceInstances +"----"+repository.dubboRestServiceMetadataRepository.keySet()).getBytes(),
+									System.getProperty("user.dir"),"debug.txt",true
+							);
+
 							subscribeDubboServiceURL(url, listener, serviceName,
 									s -> serviceInstances);
 						}
@@ -218,6 +226,11 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 	protected void subscribeDubboServiceURL(URL url, NotifyListener listener,
 			String serviceName,
 			Function<String, Collection<ServiceInstance>> serviceInstancesFunction) {
+
+		IOUtil.writeFile(
+				("\n---------仓库服务-------"+repository.dubboRestServiceMetadataRepository.keySet()).getBytes(),
+				System.getProperty("user.dir"),"debug.txt",true
+		);
 
 		if (logger.isInfoEnabled()) {
 			logger.info(
@@ -251,6 +264,11 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 						serviceName, url.getServiceKey());
 			}
 			if (isDubboMetadataServiceURL(url)) {
+				IOUtil.writeFile(
+						("\n---------删除元数据-------"+repository.dubboRestServiceMetadataRepository.keySet()).getBytes(),
+						System.getProperty("user.dir"),"debug.txt",true
+				);
+
 				// if meta service change, and serviceInstances is zero, will clean up
 				// information about this client
 				dubboMetadataConfigServiceProxy.removeProxy(serviceName);
@@ -270,6 +288,10 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 				logger.debug("The subscribed URL[{}] will notify all URLs : {}", url,
 						allSubscribedURLs);
 			}
+			IOUtil.writeFile(
+					("\n---------listener.notify1("+allSubscribedURLs).getBytes(),
+					System.getProperty("user.dir"),"debug.txt",true
+			);
 			listener.notify(allSubscribedURLs);
 			return;
 		}
@@ -288,6 +310,10 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 								+ "Dubbo service invocation",
 						url.getServiceKey());
 			}
+			IOUtil.writeFile(
+					("\n---------元数据==null("+serviceName).getBytes(),
+					System.getProperty("user.dir"),"debug.txt",true
+			);
 			return;
 		}
 
@@ -320,7 +346,10 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 			logger.debug("The subscribed URL[{}] will notify all URLs : {}", url,
 					allSubscribedURLs);
 		}
-
+		IOUtil.writeFile(
+				("\n---------notify.end("+allSubscribedURLs).getBytes(),
+				System.getProperty("user.dir"),"debug.txt",true
+		);
 		listener.notify(allSubscribedURLs);
 	}
 

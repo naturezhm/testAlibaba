@@ -10,9 +10,9 @@ dubbo:
   protocol:
     name: dubbo
     port: ${random.int[25000,65000]}
+    heartbeat: 3000
   registry:
     address: spring-cloud://localhost
-
 spring:
   application:
     name: spring-cloud-alibaba-dubbo-server
