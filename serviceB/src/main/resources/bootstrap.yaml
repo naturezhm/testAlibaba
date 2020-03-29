@@ -6,8 +6,7 @@ dubbo:
     base-packages: org.alibaba.testb
   protocol:
     name: dubbo
-    port: 20881
-    heartbeat: 3000
+    port: ${random.int[25000,65000]}
   consumer:
     check: false
     generic: false
@@ -15,6 +14,7 @@ dubbo:
     address: spring-cloud://localhost
   cloud:
     subscribed-services: spring-cloud-alibaba-dubbo-server
+
 spring:
   application:
     name: spring-cloud-alibaba-dubbo-client

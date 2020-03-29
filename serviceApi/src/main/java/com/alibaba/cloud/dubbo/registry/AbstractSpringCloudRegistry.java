@@ -192,7 +192,8 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 	private void registerServiceInstancesChangedEventListener(URL url,
 			NotifyListener listener) {
 		String listenerId = generateId(url);
-		if (registerListeners.add(listenerId)) {
+		Boolean notExistRegisterListener = registerListeners.add(listenerId);
+		if (notExistRegisterListener || isDubboMetadataServiceURL(url)) {
 			applicationContext.addApplicationListener(
 					new ApplicationListener<ServiceInstancesChangedEvent>() {
 						@Override
