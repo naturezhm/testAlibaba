@@ -16,6 +16,19 @@
 
 package com.alibaba.cloud.dubbo.metadata.repository;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.PostConstruct;
+
 import com.alibaba.cloud.dubbo.env.DubboCloudProperties;
 import com.alibaba.cloud.dubbo.http.matcher.RequestMetadataMatcher;
 import com.alibaba.cloud.dubbo.metadata.DubboRestServiceMetadata;
@@ -31,6 +44,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.apache.dubbo.common.URL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,18 +58,6 @@ import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
-import javax.annotation.PostConstruct;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.alibaba.cloud.dubbo.env.DubboCloudProperties.ALL_DUBBO_SERVICES;
 import static com.alibaba.cloud.dubbo.http.DefaultHttpRequest.builder;
@@ -152,7 +154,7 @@ public class DubboServiceMetadataRepository
 	 * Key is application name Value is Map&lt;RequestMetadata,
 	 * DubboRestServiceMetadata&gt;.
 	 */
-	public Map<String, Map<RequestMetadataMatcher, DubboRestServiceMetadata>> dubboRestServiceMetadataRepository = newHashMap();
+	private Map<String, Map<RequestMetadataMatcher, DubboRestServiceMetadata>> dubboRestServiceMetadataRepository = newHashMap();
 
 	// ====================================================================================
 	// //
@@ -188,7 +190,7 @@ public class DubboServiceMetadataRepository
 	// //
 
 	private static <K, V> Map<K, V> getMap(Map<String, Map<K, V>> repository,
-			String key) {
+										   String key) {
 		return getOrDefault(repository, key, newHashMap());
 	}
 
@@ -312,6 +314,7 @@ public class DubboServiceMetadataRepository
 			if (DubboMetadataService.class.getName().equals(url.getServiceInterface())) {
 				String serviceKey = url.getServiceKey();
 				subscribedDubboMetadataServiceURLs.remove(serviceKey);
+				getDubboMetadataServiceMetadata();
 			}
 
 		}
@@ -341,7 +344,7 @@ public class DubboServiceMetadataRepository
 	}
 
 	private void addDubboMetadataServiceURLsMetadata(Map<String, String> metadata,
-			List<URL> dubboMetadataServiceURLs) {
+													 List<URL> dubboMetadataServiceURLs) {
 		String dubboMetadataServiceURLsJSON = jsonUtils.toJSON(dubboMetadataServiceURLs);
 		metadata.put(DUBBO_METADATA_SERVICE_URLS_PROPERTY_NAME,
 				dubboMetadataServiceURLsJSON);
@@ -388,7 +391,7 @@ public class DubboServiceMetadataRepository
 	}
 
 	public List<URL> findSubscribedDubboMetadataServiceURLs(String serviceName,
-			String group, String version, String protocol) {
+															String group, String version, String protocol) {
 		String serviceKey = URL.buildKey(serviceName, group, version);
 
 		List<URL> urls = null;
@@ -468,7 +471,7 @@ public class DubboServiceMetadataRepository
 	}
 
 	public Integer getDubboProtocolPort(ServiceInstance serviceInstance,
-                                        String protocol) {
+										String protocol) {
 		String protocolProperty = getDubboProtocolPropertyName(protocol);
 		Map<String, String> metadata = serviceInstance.getMetadata();
 		String protocolPort = metadata.get(protocolProperty);
@@ -476,7 +479,7 @@ public class DubboServiceMetadataRepository
 	}
 
 	public List<URL> getExportedURLs(String serviceInterface, String group,
-			String version) {
+									 String version) {
 		String serviceKey = URL.buildKey(serviceInterface, group, version);
 		return allExportedURLs.getOrDefault(serviceKey, Collections.emptyList());
 	}
@@ -533,7 +536,7 @@ public class DubboServiceMetadataRepository
 	 * @return {@link DubboRestServiceMetadata} if matched, or <code>null</code>
 	 */
 	public DubboRestServiceMetadata get(String serviceName,
-                                        RequestMetadata requestMetadata) {
+										RequestMetadata requestMetadata) {
 		return match(dubboRestServiceMetadataRepository, serviceName, requestMetadata);
 	}
 
@@ -550,7 +553,7 @@ public class DubboServiceMetadataRepository
 	}
 
 	private <T> T match(Map<String, Map<RequestMetadataMatcher, T>> repository,
-			String serviceName, RequestMetadata requestMetadata) {
+						String serviceName, RequestMetadata requestMetadata) {
 
 		Map<RequestMetadataMatcher, T> map = repository.get(serviceName);
 

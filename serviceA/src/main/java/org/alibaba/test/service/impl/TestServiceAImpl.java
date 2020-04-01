@@ -10,13 +10,8 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 public class TestServiceAImpl implements TestServiceA {
-    private static final Logger logger = LoggerFactory.getLogger(TestServiceAImpl.class);
 
-    @Override
-    public String testA(String in) {
-        logger.info("========= this is service A testA");
-        return "hello" + in;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(TestServiceAImpl.class);
 
     @Override
     public String testLocalDateTime(LocalDateTime localDateTime) {

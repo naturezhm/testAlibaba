@@ -13,11 +13,6 @@ public class TestController {
     @Reference
     TestServiceA testServiceA;
 
-    @GetMapping("/echo")
-    public String echo(String message) {
-        return testServiceA.testA(message);
-    }
-
     @GetMapping("/testLocalDateTime")
     public String testLocalDateTime() {
         LocalDateTime now = LocalDateTime.now();

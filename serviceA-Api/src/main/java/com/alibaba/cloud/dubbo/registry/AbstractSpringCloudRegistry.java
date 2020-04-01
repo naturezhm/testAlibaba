@@ -16,25 +16,6 @@
 
 package com.alibaba.cloud.dubbo.registry;
 
-import com.alibaba.cloud.dubbo.metadata.repository.DubboServiceMetadataRepository;
-import com.alibaba.cloud.dubbo.registry.event.ServiceInstancesChangedEvent;
-import com.alibaba.cloud.dubbo.service.DubboGenericServiceFactory;
-import com.alibaba.cloud.dubbo.service.DubboMetadataService;
-import com.alibaba.cloud.dubbo.service.DubboMetadataServiceProxy;
-import com.alibaba.cloud.dubbo.util.JSONUtils;
-import org.alibaba.test.service.IOUtil;
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.registry.NotifyListener;
-import org.apache.dubbo.registry.RegistryFactory;
-import org.apache.dubbo.registry.support.FailbackRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.util.CollectionUtils;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -42,6 +23,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.alibaba.cloud.dubbo.metadata.repository.DubboServiceMetadataRepository;
+import com.alibaba.cloud.dubbo.registry.event.ServiceInstancesChangedEvent;
+import com.alibaba.cloud.dubbo.service.DubboGenericServiceFactory;
+import com.alibaba.cloud.dubbo.service.DubboMetadataService;
+import com.alibaba.cloud.dubbo.service.DubboMetadataServiceProxy;
+import com.alibaba.cloud.dubbo.util.JSONUtils;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.registry.NotifyListener;
+import org.apache.dubbo.registry.RegistryFactory;
+import org.apache.dubbo.registry.support.FailbackRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.util.CollectionUtils;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -98,10 +98,10 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 	private final ConfigurableApplicationContext applicationContext;
 
 	public AbstractSpringCloudRegistry(URL url, DiscoveryClient discoveryClient,
-                                       DubboServiceMetadataRepository dubboServiceMetadataRepository,
-                                       DubboMetadataServiceProxy dubboMetadataConfigServiceProxy,
-                                       JSONUtils jsonUtils, DubboGenericServiceFactory dubboGenericServiceFactory,
-                                       ConfigurableApplicationContext applicationContext) {
+									   DubboServiceMetadataRepository dubboServiceMetadataRepository,
+									   DubboMetadataServiceProxy dubboMetadataConfigServiceProxy,
+									   JSONUtils jsonUtils, DubboGenericServiceFactory dubboGenericServiceFactory,
+									   ConfigurableApplicationContext applicationContext) {
 		super(url);
 		this.servicesLookupInterval = url
 				.getParameter(SERVICES_LOOKUP_INTERVAL_PARAM_NAME, 60L);
@@ -190,10 +190,9 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 	 * @param listener {@link NotifyListener}
 	 */
 	private void registerServiceInstancesChangedEventListener(URL url,
-			NotifyListener listener) {
+															  NotifyListener listener) {
 		String listenerId = generateId(url);
-		Boolean notExistRegisterListener = registerListeners.add(listenerId);
-		if (notExistRegisterListener || isDubboMetadataServiceURL(url)) {
+		if (registerListeners.add(listenerId) || isDubboMetadataServiceURL(url)) {
 			applicationContext.addApplicationListener(
 					new ApplicationListener<ServiceInstancesChangedEvent>() {
 						@Override
@@ -202,13 +201,6 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 							String serviceName = event.getServiceName();
 							Collection<ServiceInstance> serviceInstances = event
 									.getServiceInstances();
-							logger.error("\n------------{}, \n{}",url,serviceInstances);
-
-							IOUtil.writeFile(
-									("\n--------"+serviceInstances+"---"+url+"----\n"+serviceInstances +"----"+repository.dubboRestServiceMetadataRepository.keySet()).getBytes(),
-									System.getProperty("user.dir"),"debug.txt",true
-							);
-
 							subscribeDubboServiceURL(url, listener, serviceName,
 									s -> serviceInstances);
 						}
@@ -225,13 +217,8 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 	}
 
 	protected void subscribeDubboServiceURL(URL url, NotifyListener listener,
-			String serviceName,
-			Function<String, Collection<ServiceInstance>> serviceInstancesFunction) {
-
-		IOUtil.writeFile(
-				("\n---------仓库服务-------"+repository.dubboRestServiceMetadataRepository.keySet()).getBytes(),
-				System.getProperty("user.dir"),"debug.txt",true
-		);
+											String serviceName,
+											Function<String, Collection<ServiceInstance>> serviceInstancesFunction) {
 
 		if (logger.isInfoEnabled()) {
 			logger.info(
@@ -265,20 +252,13 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 						serviceName, url.getServiceKey());
 			}
 			if (isDubboMetadataServiceURL(url)) {
-				IOUtil.writeFile(
-						("\n---------删除元数据-------"+repository.dubboRestServiceMetadataRepository.keySet()).getBytes(),
-						System.getProperty("user.dir"),"debug.txt",true
-				);
-
 				// if meta service change, and serviceInstances is zero, will clean up
 				// information about this client
 				dubboMetadataConfigServiceProxy.removeProxy(serviceName);
 				repository.removeMetadataAndInitializedService(serviceName, url);
 				dubboGenericServiceFactory.destroy(serviceName);
-				String listenerId = generateId(url);
-				// The metaservice will restart the new listener. It needs to be optimized
-				// to see whether the original listener can be reused.
-				this.registerListeners.remove(listenerId);
+				// clean the listener
+				unsubscribe(url, listener);
 			}
 
 			/**
@@ -289,10 +269,6 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 				logger.debug("The subscribed URL[{}] will notify all URLs : {}", url,
 						allSubscribedURLs);
 			}
-			IOUtil.writeFile(
-					("\n---------listener.notify1("+allSubscribedURLs).getBytes(),
-					System.getProperty("user.dir"),"debug.txt",true
-			);
 			listener.notify(allSubscribedURLs);
 			return;
 		}
@@ -311,10 +287,6 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 								+ "Dubbo service invocation",
 						url.getServiceKey());
 			}
-			IOUtil.writeFile(
-					("\n---------元数据==null("+serviceName).getBytes(),
-					System.getProperty("user.dir"),"debug.txt",true
-			);
 			return;
 		}
 
@@ -347,10 +319,7 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 			logger.debug("The subscribed URL[{}] will notify all URLs : {}", url,
 					allSubscribedURLs);
 		}
-		IOUtil.writeFile(
-				("\n---------notify.end("+allSubscribedURLs).getBytes(),
-				System.getProperty("user.dir"),"debug.txt",true
-		);
+
 		listener.notify(allSubscribedURLs);
 	}
 
@@ -384,7 +353,7 @@ public abstract class AbstractSpringCloudRegistry extends FailbackRegistry {
 	}
 
 	private List<URL> getExportedURLs(DubboMetadataService dubboMetadataService,
-                                      URL url) {
+									  URL url) {
 		String serviceInterface = url.getServiceInterface();
 		String group = url.getParameter(GROUP_KEY);
 		String version = url.getParameter(VERSION_KEY);
