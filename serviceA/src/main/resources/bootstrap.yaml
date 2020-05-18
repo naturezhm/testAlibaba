@@ -11,8 +11,8 @@ dubbo:
     name: dubbo
     port: ${random.int[25000,65000]}
     heartbeat: 3000
-  registry:
-    address: spring-cloud://localhost
+#  registry:
+#    address: nacos://127.0.0.1:8848 #spring-cloud://localhost
   cloud:
     subscribed-services: spring-cloud-alibaba-dubbo-client
 
@@ -32,3 +32,8 @@ spring:
 logging:
   level:
     root: info
+    org:
+      apache:
+        dubbo:
+          config:
+            ServiceConfig: error

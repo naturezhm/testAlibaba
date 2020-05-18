@@ -10,8 +10,10 @@ dubbo:
   consumer:
     check: false
     generic: false
-  registry:
-    address: spring-cloud://localhost
+#  registry:
+#    address: nacos://127.0.0.1:8848/?username=nacos&password=nacos #spring-cloud://localhost
+    # port: 8848
+    # protocol: nacos
   cloud:
     subscribed-services: spring-cloud-alibaba-dubbo-server
 
@@ -30,4 +32,9 @@ spring:
 
 logging:
   level:
-    root: warn
+    root: info
+    org:
+      apache:
+        dubbo:
+          config:
+            ServiceConfig: error
