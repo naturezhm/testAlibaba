@@ -1,0 +1,10 @@
+/logs
+.idea
+/.idea
+*.iml
+/target
+.project
+.settings/org.eclipse.core.resources.prefs
+.settings/org.eclipse.m2e.core.prefs
+# mac
+.DS_Store
